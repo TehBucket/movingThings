@@ -7,6 +7,7 @@ very bad x-axis colission with tall, skinny boxes.
 square boxes above original xy act funky during draw
 when scrolling, player moves different speed than scroll
 fake-motion-blur looks super fake when jumping
+keys overlap with browser commands (alt-d, ctrl-w)
 
 FEATURES to add:
 remove block (either delete pointed at or get complex and draw negative space)
@@ -33,7 +34,7 @@ var player ={
 	height:25,
 	xForce:0,
 	yForce:gravity,
-	friction:.05,
+	friction:.1,
 	weight:.1,
 }
 
@@ -91,22 +92,36 @@ var physicsMove = function(obj){
 		//else if(x+width >= gameCanvas.width){x=gameCanvas.width-width;xForce=0;}
 		// if(y<=0){y=0;yForce=gravity/8;}
 		// else if(y+height>=gameCanvas.height){y=gameCanvas.height-height;yForce=0;}
-		(yForce==0) ? xForce/=1+friction : xForce/=1+friction/2;
+		(yForce==0) ? xForce/=1+friction : xForce/=1+friction/3;
 		//check boxes colission
-		for(var i=0;i<things.length;i++){
+		for(var i=0;i<things.length;i++){if(obj!=things[i]){
 			if(x+width >= things[i].x + things[i].width/50 && x <= things[i].x+things[i].width - things[i].width/50){
 				if(y+height >= things[i].y && y <= things[i].y+things[i].height){
-					if(y+height < things[i].y + things[i].height/2){y=things[i].y-height; yForce=0}
-					else{y=things[i].y+things[i].height; yForce=gravity/8} //hits roof, falls
+					if(y+height < things[i].y + things[i].height/2){
+						y=things[i].y-height;
+						yForce=0;
+						things[i].yForce += yForce;
+					} //lands on object
+					else{
+						y=things[i].y+things[i].height;
+						yForce=gravity/8;
+						things[i].yForce += yForce;
+					} //hits roof, falls
 				}
 			}
 			if(y+height >= things[i].y +height/50 && y <= things[i].y+things[i].height -height/50){
 				if(x+width >= things[i].x && x <= things[i].x+things[i].width){
-					if(x+width < things[i].x + things[i].width/2){x=things[i].x-width}
-					else{x=things[i].x+things[i].width}
+					if(x+width < things[i].x + things[i].width/2){
+						x=things[i].x-width;
+						things[i].xForce += xForce;
+					}
+					else{
+						x=things[i].x+things[i].width;
+						things[i].xForce += xForce;
+					}
 				}
 			}
-		}
+		}}
 	}
 }
 
