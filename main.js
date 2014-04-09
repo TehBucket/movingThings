@@ -15,6 +15,7 @@ remove block (either delete pointed at or get complex and draw negative space)
 
 var gameCanvas = document.getElementById('game');
 var game2d = gameCanvas.getContext('2d');
+var globalY = 0;
 
 var keys = {
 	left:false,
@@ -40,8 +41,6 @@ var player ={
 
 var things = [
 	{x:200,y:500,width:150,height:20,drawing:false,yForce:0,xForce:0,weight:.1,friction:.02,fixed:true},
-	{x:0,y:gameCanvas.height,width:1000,height:200,drawing:false,yForce:0,xForce:0,weight:.1,friction:.02,fixed:true}
-
 	];
 	
 var newBox = function(x,y){
@@ -91,7 +90,7 @@ var physicsMove = function(obj){
 		//if(x<=0){x = 0;xForce=0;}
 		//else if(x+width >= gameCanvas.width){x=gameCanvas.width-width;xForce=0;}
 		// if(y<=0){y=0;yForce=gravity/8;}
-		// else if(y+height>=gameCanvas.height){y=gameCanvas.height-height;yForce=0;}
+		if(globalY<=0 && y+height>=gameCanvas.height){y=gameCanvas.height-height;yForce=0;}
 		(yForce==0) ? xForce/=1+friction : xForce/=1+friction/3;
 		//check boxes colission
 		for(var i=0;i<things.length;i++){if(obj!=things[i]){
@@ -137,10 +136,11 @@ var scrollGame = function(obj){// follows object, scrolls all other elements
 	with(obj){
 		if(x+width>=gW-gW/10 && xForce>0){scroll('x',-xForce)}; //scroll right
 		if(x<=gW/10 && xForce<0){scroll('x',-xForce)}; //scroll left
-		if(y<=gH/10 && yForce<0){scroll('y',-yForce)}; //scroll up
-		if(y+height>=gH-gH/10 && yForce>0){scroll('y',-yForce)}; //scroll up
-
-
+		if(y<=gH/10 && yForce<0){scroll('y',-yForce);globalY-=yForce} //scroll up
+		if(y+height>=gH-gH/10 && yForce>0 && globalY>0){
+			scroll('y',-yForce);
+			globalY-=yForce;
+		} //scroll down
 	}
 }
 
