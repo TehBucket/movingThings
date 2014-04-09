@@ -1,3 +1,9 @@
+/*
+BUGS:
+teleports to far left/right when sliding on top off left or right (looks like zooming)
+very bad x-axis colission with tall, skinny boxes.
+*/
+
 var gameCanvas = document.getElementById('game');
 var game2d = gameCanvas.getContext('2d');
 
@@ -56,17 +62,15 @@ var physicsMove = function(object){
 				xForce/=1+friction;
 				//check boxes colission
 				for(var i=0;i<things.length;i++){
-					if(x+width >= things[i].x + things[i].width/10 && x <= things[i].x+things[i].width - things[i].width/10){
+					if(x+width >= things[i].x + things[i].width/50 && x <= things[i].x+things[i].width - things[i].width/50){
 						if(y+height >= things[i].y && y <= things[i].y+things[i].height){
 							if(y+height < things[i].y + height/2){y=things[i].y-height}
 							else{y=things[i].y+things[i].height; yForce=gravity} //hits roof, falls
 						}
 					}
-					if(y+height >= things[i].y +height/10 && y <= things[i].y+things[i].height -height/10){
-						console.log(1);
+					if(y+height >= things[i].y +height/50 && y <= things[i].y+things[i].height -height/50){
 						if(x+width >= things[i].x && x <= things[i].x+things[i].width){
-							console.log(2);
-							if(x+width < things[i].x + width/2){x=things[i].x-width}
+							if(x+width < things[i].x + width){x=things[i].x-width}
 							else{x=things[i].x+things[i].width}
 					}
 				}
@@ -77,13 +81,14 @@ var physicsMove = function(object){
 
 var update = function(){
 	gameCanvas.width = gameCanvas.width;
+	game2d.fillStyle ="#ffffff";
 	for(var i=0;i<things.length;i++){with(things[i]){
-		game2d.fillStyle = "#555555";
+		// game2d.fillStyle = "#555555";
 		game2d.fillRect(x,y,width,height);
-
+		// game2d.fillStyle = "#000000";
+		// game2d.fillRect(x+width/100,y+height/100,width-width/50,height-height/50);
 		//testing
 		}} //draws boxes
-	game2d.fillStyle ="#ffffff";
 	physicsMove(player);
 	if(keys.left){addForce(player,-.1,0)}
 	else if(keys.right){addForce(player,.1,0)}
