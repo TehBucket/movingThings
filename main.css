@@ -1,4 +1,14 @@
+body{
+background-color:#033300;
+}
+
 #game{
-border-color:gray;
-border-style:solid;
+border:1px solid #ffffff;
+}
+
+.instructions{
+color:#ffffff;
+font-size:18pt;
+margin:0 0;
+font-family:verdana;
 }
