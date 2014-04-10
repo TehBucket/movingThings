@@ -1,21 +1,19 @@
 /*
 BUGS:
-NO WORKING X COLISSION
-
-teleports to far left/right when sliding on top off left or right (looks like zooming)
 very bad x-axis colission with tall, skinny boxes.
-square boxes above original xy act funky during draw
-when scrolling, player moves different speed than scroll
-fake-motion-blur looks super fake when jumping
+vary bad box-on-box colission
+when scrolling, player moves slightly different speed than scroll
+fake-motion-blur looks super fake when jumping (on a thin block)
 keys overlap with browser commands (alt-d, ctrl-w)
 
 FEATURES to add:
-remove block (either delete pointed at or get complex and draw negative space)
+block physics - affected by weight and stuff
 */
 
 var gameCanvas = document.getElementById('game');
 var game2d = gameCanvas.getContext('2d');
 var globalY = 0;
+var debug = false;
 
 var keys = {
 	left:false,
@@ -93,8 +91,10 @@ var physicsMove = function(obj){
 		if(globalY<=0 && y+height>=gameCanvas.height){y=gameCanvas.height-height;yForce=0;}
 		(yForce==0) ? xForce/=1+friction : xForce/=1+friction/3;
 		//check boxes colission
+		var yPad = 50/Math.abs(xForce);
+		var xPad = 50/Math.abs(yForce);
 		for(var i=0;i<things.length;i++){if(obj!=things[i]){
-			if(x+width >= things[i].x + things[i].width/50 && x <= things[i].x+things[i].width - things[i].width/50){
+			if(x+width >= things[i].x + things[i].width/yPad && x <= things[i].x+things[i].width - things[i].width/yPad){
 				if(y+height >= things[i].y && y <= things[i].y+things[i].height){
 					if(y+height < things[i].y + things[i].height/2){
 						y=things[i].y-height;
@@ -108,7 +108,7 @@ var physicsMove = function(obj){
 					} //hits roof, falls
 				}
 			}
-			if(y+height >= things[i].y +height/50 && y <= things[i].y+things[i].height -height/50){
+			if(y+height >= things[i].y +height/xPad && y <= things[i].y+things[i].height -height/xPad){
 				if(x+width >= things[i].x && x <= things[i].x+things[i].width){
 					if(x+width < things[i].x + things[i].width/2){
 						x=things[i].x-width;
@@ -146,10 +146,19 @@ var scrollGame = function(obj){// follows object, scrolls all other elements
 
 var update = function(){
 	gameCanvas.width = gameCanvas.width;
-	game2d.fillStyle = "rgb(255,255,255)";
 	for(var i=0;i<things.length;i++){with(things[i]){
-		game2d.fillRect(x,y,width,height);
 		if(!fixed){physicsMove(things[i])}
+		else{
+			game2d.fillStyle = "rgb(255,255,255)";
+			game2d.fillRect(x,y,width,height);
+					//DEbugging junk: (SHows padding)
+			if(debug){
+				var dxf = 50/Math.abs(player.xForce);
+				var dyf = 50/Math.abs(player.yForce);
+				game2d.fillStyle = "rgb(255,0,0)";
+				game2d.fillRect(x+width/(dxf*2),y+height/(dyf*2),width-width/dxf,height-height/dyf);
+			}
+		}
 		}} //draws boxes
 	physicsMove(player);
 	scrollGame(player);
@@ -164,7 +173,7 @@ document.addEventListener('mousedown', function(e){
 	var Cx = e.clientX - gameCanvas.getBoundingClientRect().left;
 	var Cy = e.clientY - gameCanvas.getBoundingClientRect().top;
 	if(!keys.del){things.push(new newBox(Cx,Cy));}
-	else{
+	else{ //find and remove clicked boxes
 		var arr = [];
 		for(var i=0;i<things.length;i++){with(things[i]){
 			if(Cx >= x && Cx <= x+width && Cy >= y && Cy <= y+height){
@@ -183,17 +192,18 @@ document.addEventListener('mousemove', function(e){
 				var Cy = e.clientY - gameCanvas.getBoundingClientRect().top;
 				width = Math.abs(Cx-dx);
 				if(width<=10){width=10}
-				if(keys.square){height=width}
+				if(keys.square){ //square box
+					if(Cy<dy){(Cy<dy-width) ? y=dy-width : y=Cy;} //ehhh works for now
+					else{y=dy}
+					height=width;
+				}
 				else{
 					height = Math.abs(Cy-dy);
 					if(height<=10){height=10}
+					if(Cy<dy){y=Cy;}
 				}
-				if(Cx<dx){
-					x=Cx;
-				}
-				if(Cy<dy){
-					y=Cy;
-				}
+				if(Cx<dx){x=Cx;}
+				// weight = width*height/500; //scale weight based on size later
 			}
 		}
 	}
@@ -203,7 +213,7 @@ addEventListener('mouseup', function(e){
 	if(things.length !=0){things[things.length-1].drawing = false;}
 },false);
 
-//movement controls
+//controls
 document.addEventListener('keydown', function(e){
 	if(e.keyCode==65||e.keyCode==37){keys.left=true}
 	if(e.keyCode==68||e.keyCode==39){keys.right=true}
@@ -219,4 +229,8 @@ document.addEventListener('keyup', function(e){
 	if(e.keyCode==17){keys.del=false}
 	if(e.keyCode==16){keys.square=false}
 	if(e.keyCode==18){keys.physics=false}
+},false);
+//turns off keys when tabs/window is switched
+window.addEventListener('blur', function() {
+  keys.left,keys.right,keys.square,keys.physics=false;
 },false);
